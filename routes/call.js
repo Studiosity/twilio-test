@@ -8,15 +8,16 @@ router.post('/connect', twilio.webhook({validate: false}), function(req, res, ne
   const user = req.body.user;
   const twiml = new VoiceResponse();
 
-  // Dial the user
-  const dial = twiml.dial();
-  dial.client({}, user);
-
   // Start streaming to the websocket
   const start = twiml.start();
   start.stream({
-    url: `wss://${req.headers.host}/websocket`
+    url: `wss://${req.headers.host}/websocket`,
+    track: 'both_tracks'
   });
+
+  // Dial the user
+  const dial = twiml.dial();
+  dial.client({}, user);
 
   console.log(`Call string: ${twiml.toString()}`);
   res.send(twiml.toString());

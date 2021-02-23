@@ -14,11 +14,11 @@ $(document).ready(function() {
     event.preventDefault();
     connectButton.prop('disabled', true);
 
-    const webSocket = new WebSocket("ws://localhost:3000/websocket");
+    const webSocket = new WebSocket("wss://1ed5c0449e9b.ngrok.io/websocket");
     webSocket.onmessage = function (msg) {
       const data = JSON.parse(msg.data);
       if (data.event === "interim-transcription") {
-        transcriptionContainer.text(data.text);
+        transcriptionContainer.find(`.${data.from}`).text(data.text);
       } else {
         console.log(`Got message: ${msg.data}`);
       }

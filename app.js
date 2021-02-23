@@ -22,14 +22,16 @@ app.set('port', port);
 
 //Include Google Speech to Text
 const speech = require("@google-cloud/speech");
-const client = new speech.SpeechClient();
+const inboundClient = new speech.SpeechClient();
+const outboundClient = new speech.SpeechClient();
+let inboundTranscriber, outboundTranscriber;
 
 //Configure Transcription Request
 const transcriptionRequest = {
   config: {
     encoding: "MULAW",
     sampleRateHertz: 8000,
-    languageCode: "en-GB",
+    languageCode: "en-AU",
   },
   interimResults: true, // If you want interim results, set this to true
 };
@@ -47,8 +49,8 @@ wss.on("connection", function connection(ws) {
         break;
       case "start":
         console.log(`Starting Media Stream ${msg.streamSid}`);
-        // Create Stream to the Google Speech to Text API
-        recognizeStream = client
+        // Create Streams to the Google Speech to Text API
+        inboundTranscriber = inboundClient
           .streamingRecognize(transcriptionRequest)
           .on("error", console.error)
           .on("data", (data) => {
@@ -59,6 +61,25 @@ wss.on("connection", function connection(ws) {
                   JSON.stringify({
                     event: "interim-transcription",
                     text: data.results[0].alternatives[0].transcript,
+                    from: 'inbound'
+                  })
+                );
+              }
+            });
+          });
+
+        outboundTranscriber = outboundClient
+          .streamingRecognize(transcriptionRequest)
+          .on("error", console.error)
+          .on("data", (data) => {
+            console.log(data.results[0].alternatives[0].transcript);
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(
+                  JSON.stringify({
+                    event: "interim-transcription",
+                    text: data.results[0].alternatives[0].transcript,
+                    from: 'outbound'
                   })
                 );
               }
@@ -67,7 +88,10 @@ wss.on("connection", function connection(ws) {
         break;
       case "media":
         // Write Media Packets to the recognize stream
-        recognizeStream.write(msg.media.payload);
+        if (msg.media.track === 'inbound')
+          inboundTranscriber.write(msg.media.payload);
+        else if (msg.media.track === 'outbound')
+          outboundTranscriber.write(msg.media.payload);
         break;
       case "stop":
         console.log(`Call Has Ended`);
