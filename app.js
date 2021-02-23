@@ -49,7 +49,7 @@ wss.on("connection", function connection(ws) {
       case "start":
         console.log(`Starting Media Stream ${msg.streamSid}`);
         // Create Streams to the Google Speech to Text API
-        ['inbound', 'outbound'].forEach(function(direction) {
+        msg.start.tracks.forEach(function(direction) {
           transcribers[direction] = inboundClient
             .streamingRecognize(transcriptionRequest)
             .on("error", console.error)

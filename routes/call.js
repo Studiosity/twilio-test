@@ -19,7 +19,6 @@ router.post('/connect', twilio.webhook({validate: false}), function(req, res, ne
   const dial = twiml.dial();
   dial.client({}, user);
 
-  console.log(`Call string: ${twiml.toString()}`);
   res.send(twiml.toString());
 });
 
