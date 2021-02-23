@@ -24,7 +24,6 @@ app.set('port', port);
 const speech = require("@google-cloud/speech");
 const inboundClient = new speech.SpeechClient();
 const outboundClient = new speech.SpeechClient();
-let inboundTranscriber, outboundTranscriber;
 
 //Configure Transcription Request
 const transcriptionRequest = {
@@ -39,7 +38,7 @@ const transcriptionRequest = {
 wss.on("connection", function connection(ws) {
   console.log("New Connection Initiated");
 
-  let recognizeStream = null;
+  let transcribers = {};
 
   ws.on("message", function incoming(message) {
     const msg = JSON.parse(message);
@@ -50,52 +49,37 @@ wss.on("connection", function connection(ws) {
       case "start":
         console.log(`Starting Media Stream ${msg.streamSid}`);
         // Create Streams to the Google Speech to Text API
-        inboundTranscriber = inboundClient
-          .streamingRecognize(transcriptionRequest)
-          .on("error", console.error)
-          .on("data", (data) => {
-            console.log(data.results[0].alternatives[0].transcript);
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    event: "interim-transcription",
-                    text: data.results[0].alternatives[0].transcript,
-                    from: 'inbound'
-                  })
-                );
-              }
+        ['inbound', 'outbound'].forEach(function(direction) {
+          transcribers[direction] = inboundClient
+            .streamingRecognize(transcriptionRequest)
+            .on("error", console.error)
+            .on("data", (data) => {
+              console.log(data.results[0].alternatives[0].transcript);
+              wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(
+                    JSON.stringify({
+                      event: "interim-transcription",
+                      text: data.results[0].alternatives[0].transcript,
+                      from: direction
+                    })
+                  );
+                }
+              });
             });
-          });
-
-        outboundTranscriber = outboundClient
-          .streamingRecognize(transcriptionRequest)
-          .on("error", console.error)
-          .on("data", (data) => {
-            console.log(data.results[0].alternatives[0].transcript);
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    event: "interim-transcription",
-                    text: data.results[0].alternatives[0].transcript,
-                    from: 'outbound'
-                  })
-                );
-              }
-            });
-          });
+        });
         break;
       case "media":
         // Write Media Packets to the recognize stream
-        if (msg.media.track === 'inbound')
-          inboundTranscriber.write(msg.media.payload);
-        else if (msg.media.track === 'outbound')
-          outboundTranscriber.write(msg.media.payload);
+        if (transcribers[msg.media.track])
+          transcribers[msg.media.track].write(msg.media.payload);
         break;
       case "stop":
         console.log(`Call Has Ended`);
-        recognizeStream.destroy();
+        Object.keys(transcribers).forEach(function(direction) {
+          transcribers[direction].destroy();
+          delete transcribers[direction];
+        });
         break;
     }
   });
