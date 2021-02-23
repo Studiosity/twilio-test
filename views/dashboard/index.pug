@@ -1,0 +1,29 @@
+extends ../layout
+
+block content
+  form.form-inline
+    .form-group
+      label.mr-1(for="user_id") User ID
+      input.form-control.mr-1(type="text" id="user_id" value=user_id)
+    button.btn.btn-primary.mr-1#connectButton Connect
+    button.btn.btn-success.mr-1#answerButton(disabled) Answer
+    button.btn.btn-danger#hangupButton(disabled) Hang Up
+
+  p
+    .card
+      .card-body
+        h5 Status
+        #callStatus Disconected
+
+  p
+    .card
+      .card-body
+        h5 Available Users
+        .font-italic#noUsers No users connected
+        ul#usersList
+
+  p
+    .card
+      .card-body
+        h5 Interim-transcription
+        #transcriptionContainer
