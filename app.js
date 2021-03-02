@@ -75,7 +75,7 @@ wss.on("connection", function connection(ws) {
           transcribers[msg.media.track].write(msg.media.payload);
         break;
       case "stop":
-        console.log(`Call Has Ended`);
+        console.log('Call Has Ended');
         Object.keys(transcribers).forEach(function(direction) {
           transcribers[direction].destroy();
           delete transcribers[direction];
