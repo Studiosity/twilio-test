@@ -19,7 +19,7 @@ $(document).ready(function() {
         if (data.type === 'interim') {
           $(`#${data.transcriber}InterimContainer .${data.from}`).text(data.text);
         } else if (data.type === 'final') {
-          $(`#${data.transcriber}ChatContainer`).append(`<li><i>${data.from} said:</i> ${data.text}</li>`);
+          $(`#${data.transcriber}ChatContainer`).prepend(`<li><i>${data.from} said:</i> ${data.text}</li>`);
         }
       } else {
         console.log(`Got message: ${msg.data}`);
@@ -80,6 +80,7 @@ $(document).ready(function() {
           hangupButton.prop("disabled", false);
           answerButton.prop("disabled", true);
           usersList.find('button').prop("disabled", true);
+          clearChatLogs();
 
           calledUser = conn.message.user;
 
@@ -106,6 +107,7 @@ $(document).ready(function() {
           // Set a callback on the answer button and enable it
           answerButton.on('click', function(event) {
             event.preventDefault();
+            clearChatLogs();
 
             conn.accept();
           });
@@ -122,4 +124,9 @@ $(document).ready(function() {
 /* Helper function to update the call status bar */
 function updateCallStatus(status) {
   callStatus.text(status);
+}
+
+function clearChatLogs() {
+  $('#interimContainerRow .inbound, #interimContainerRow .outbound').text('');
+  $('#chatContainerRow li').remove()
 }
