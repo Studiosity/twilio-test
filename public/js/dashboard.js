@@ -7,18 +7,20 @@ const callStatus = $('#callStatus');
 const noUsers = $('#noUsers');
 const usersList = $('#usersList');
 
-const transcriptionContainer = $('#transcriptionContainer');
-
 $(document).ready(function() {
   connectButton.on('click', function(event) {
     event.preventDefault();
     connectButton.prop('disabled', true);
 
-    const webSocket = new WebSocket("wss://1ed5c0449e9b.ngrok.io/websocket");
+    const webSocket = new WebSocket("wss://0edb16ec27d4.ngrok.io/websocket");
     webSocket.onmessage = function (msg) {
       const data = JSON.parse(msg.data);
-      if (data.event === "interim-transcription") {
-        transcriptionContainer.find(`.${data.from}`).text(data.text);
+      if (data.event === "transcription") {
+        if (data.type === 'interim') {
+          $(`#${data.transcriber}InterimContainer .${data.from}`).text(data.text);
+        } else if (data.type === 'final') {
+          $(`#${data.transcriber}ChatContainer`).append(`<li><i>${data.from} said:</i> ${data.text}</li>`);
+        }
       } else {
         console.log(`Got message: ${msg.data}`);
       }

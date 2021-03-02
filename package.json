@@ -18,8 +18,10 @@
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "human-readable-ids": "^1.0.4",
+    "microsoft-cognitiveservices-speech-sdk": "^1.15.1",
     "pug": "^3.0.0",
     "twilio": "^3.56.0",
+    "wavefile": "^11.0.0",
     "ws": "^7.4.3"
   }
 }
