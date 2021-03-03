@@ -1,5 +1,9 @@
 extends ../layout
 
+block script
+  script(src="//sdk.twilio.com/js/client/releases/1.10.1/twilio.js")
+  script(src="/js/dashboard.js")
+
 block content
   form.form-inline
     .form-group
@@ -9,27 +13,75 @@ block content
     button.btn.btn-success.mr-1#answerButton(disabled) Answer
     button.btn.btn-danger#hangupButton(disabled) Hang Up
 
-  p
-    .card
-      .card-body
-        h5 Status
-        #callStatus Disconected
+  .row.my-2
+    .col-sm
+      .card.h-100
+        .card-body
+          h5 Status
+          #callStatus Disconnected
 
-  p
-    .card
-      .card-body
-        h5 Available Users
-        .font-italic#noUsers No users connected
-        ul#usersList
+    .col-sm
+      .card.h-100
+        .card-body
+          h5 Available Users
+          .font-italic#noUsers No users connected
+          ul#usersList
 
-  p
-    .card
-      .card-body
-        h5 Interim-transcription
-        #transcriptionContainer
-          div
-            | Inbound said:
-            .inbound
-          div
-            | Outbound said:
-            .outbound
+  .row.my-2#interimContainerRow
+    .col-sm
+      h3 Google
+      .card.h-100
+        .card-body
+          h5 Interim-transcription
+          #googleInterimContainer
+            div
+              strong Inbound said:
+              .inbound.ml-1.d-sm-inline-block
+            div
+              strong Outbound said:
+              .outbound.ml-1.d-sm-inline-block
+
+    .col-sm
+      h3 Microsoft
+      .card.h-100
+        .card-body
+          h5 Interim-transcription
+          #microsoftInterimContainer
+            div
+              strong Inbound said:
+              .inbound.ml-1.d-sm-inline-block
+            div
+              strong Outbound said:
+              .outbound.ml-1.d-sm-inline-block
+
+    .col-sm
+      h3 Amazon
+      .card.h-100
+        .card-body
+          h5 Interim-transcription
+          #amazonInterimContainer
+            div
+              strong Inbound said:
+              .inbound.ml-1.d-sm-inline-block
+            div
+              strong Outbound said:
+              .outbound.ml-1.d-sm-inline-block
+
+  .row.my-2#chatContainerRow
+    .col-sm
+      .card.card-chat.h-100
+        .card-body
+          h5 Chat log
+          ul.list-unstyled#googleChatContainer
+
+    .col-sm
+      .card.card-chat.h-100
+        .card-body
+          h5 Chat log
+          ul.list-unstyled#microsoftChatContainer
+
+    .col-sm
+      .card.card-chat.h-100
+        .card-body
+          h5 Chat log
+          ul.list-unstyled#amazonChatContainer

@@ -17,69 +17,54 @@ const server = require("http").createServer(app);
 const WebSocket = require("ws");
 const wss = new WebSocket.Server({ server, path: "/websocket" });
 
+const TranscriberManager = require('./transcribers/transcriber_manager');
+
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-//Include Google Speech to Text
-const speech = require("@google-cloud/speech");
-const inboundClient = new speech.SpeechClient();
-const outboundClient = new speech.SpeechClient();
-
-//Configure Transcription Request
-const transcriptionRequest = {
-  config: {
-    encoding: "MULAW",
-    sampleRateHertz: 8000,
-    languageCode: "en-AU",
-  },
-  interimResults: true, // If you want interim results, set this to true
-};
-
 wss.on("connection", function connection(ws) {
-  console.log("New Connection Initiated");
+  debug("New Connection Initiated");
 
-  let transcribers = {};
+  let transcriberManager = null;
 
   ws.on("message", function incoming(message) {
     const msg = JSON.parse(message);
     switch (msg.event) {
       case "connected":
-        console.log(`A new call has connected.`);
+        debug("A new call has connected.");
         break;
       case "start":
-        console.log(`Starting Media Stream ${msg.streamSid}`);
-        // Create Streams to the Google Speech to Text API
-        msg.start.tracks.forEach(function(direction) {
-          transcribers[direction] = inboundClient
-            .streamingRecognize(transcriptionRequest)
-            .on("error", console.error)
-            .on("data", (data) => {
-              console.log(data.results[0].alternatives[0].transcript);
-              wss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                  client.send(
-                    JSON.stringify({
-                      event: "interim-transcription",
-                      text: data.results[0].alternatives[0].transcript,
-                      from: direction
-                    })
-                  );
-                }
-              });
+        debug(`Starting Media Stream ${msg.streamSid}`);
+
+        transcriberManager = new TranscriberManager({
+          directions: msg.start.tracks,
+          transcriptionResult: function(transcriber, direction, type, text) {
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(
+                  JSON.stringify({
+                    event: 'transcription',
+                    transcriber: transcriber,
+                    type: type,
+                    text: text,
+                    from: direction
+                  })
+                );
+              }
             });
+          }
         });
         break;
       case "media":
         // Write Media Packets to the recognize stream
-        if (transcribers[msg.media.track])
-          transcribers[msg.media.track].write(msg.media.payload);
+        if (transcriberManager) transcriberManager.writeData(msg.media.track, msg.media.payload);
         break;
       case "stop":
-        console.log(`Call Has Ended`);
-        Object.keys(transcribers).forEach(function(direction) {
-          transcribers[direction].destroy();
-          delete transcribers[direction];
-        });
+        debug("Call Has Ended");
+        if (transcriberManager) {
+          transcriberManager.destroy();
+          transcriberManager = null;
+        }
         break;
     }
   });

@@ -7,18 +7,20 @@ const callStatus = $('#callStatus');
 const noUsers = $('#noUsers');
 const usersList = $('#usersList');
 
-const transcriptionContainer = $('#transcriptionContainer');
-
 $(document).ready(function() {
   connectButton.on('click', function(event) {
     event.preventDefault();
     connectButton.prop('disabled', true);
 
-    const webSocket = new WebSocket("wss://1ed5c0449e9b.ngrok.io/websocket");
+    const webSocket = new WebSocket("wss://293e40c7b15b.ngrok.io/websocket");
     webSocket.onmessage = function (msg) {
       const data = JSON.parse(msg.data);
-      if (data.event === "interim-transcription") {
-        transcriptionContainer.find(`.${data.from}`).text(data.text);
+      if (data.event === "transcription") {
+        if (data.type === 'interim') {
+          $(`#${data.transcriber}InterimContainer .${data.from}`).text(data.text);
+        } else if (data.type === 'final') {
+          $(`#${data.transcriber}ChatContainer`).prepend(`<li><i>${data.from} said:</i> ${data.text}</li>`);
+        }
       } else {
         console.log(`Got message: ${msg.data}`);
       }
@@ -78,6 +80,7 @@ $(document).ready(function() {
           hangupButton.prop("disabled", false);
           answerButton.prop("disabled", true);
           usersList.find('button').prop("disabled", true);
+          clearChatLogs();
 
           calledUser = conn.message.user;
 
@@ -104,6 +107,7 @@ $(document).ready(function() {
           // Set a callback on the answer button and enable it
           answerButton.on('click', function(event) {
             event.preventDefault();
+            clearChatLogs();
 
             conn.accept();
           });
@@ -120,4 +124,9 @@ $(document).ready(function() {
 /* Helper function to update the call status bar */
 function updateCallStatus(status) {
   callStatus.text(status);
+}
+
+function clearChatLogs() {
+  $('#interimContainerRow .inbound, #interimContainerRow .outbound').text('');
+  $('#chatContainerRow li').remove()
 }
