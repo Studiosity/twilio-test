@@ -15,15 +15,17 @@ const token = require('./routes/token');
 const app = express();
 const server = require("http").createServer(app);
 const WebSocket = require("ws");
-const wss = new WebSocket.Server({ server, path: "/websocket" });
+const url = require('url');
+const wssTranscribe = new WebSocket.Server({ noServer: true });
+const wssClient = new WebSocket.Server({ noServer: true });
 
 const TranscriberManager = require('./transcribers/transcriber_manager');
 
 const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-wss.on("connection", function connection(ws) {
-  debug("New Connection Initiated");
+wssTranscribe.on("connection", function connection(ws, request, client) {
+  debug(`New transcriber connection initiated from ${client}`);
 
   let transcriberManager = null;
 
@@ -39,7 +41,7 @@ wss.on("connection", function connection(ws) {
         transcriberManager = new TranscriberManager({
           directions: msg.start.tracks,
           transcriptionResult: function(transcriber, direction, type, text) {
-            wss.clients.forEach((client) => {
+            wssClient.clients.forEach((client) => {
               if (client.readyState === WebSocket.OPEN) {
                 client.send(
                   JSON.stringify({
@@ -68,6 +70,35 @@ wss.on("connection", function connection(ws) {
         break;
     }
   });
+});
+
+wssClient.on("connection", function connection(ws) {
+  debug('New client connection initiated');
+});
+
+server.on('upgrade', function upgrade(request, socket, head) {
+  const pathname = url.parse(request.url).pathname;
+
+  if (pathname === '/transcribe-socket') {
+    authenticateWebsocket(request, (err, client) => {
+      if (err || !client) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      wssTranscribe.handleUpgrade(request, socket, head, function done(ws) {
+        wssTranscribe.emit('connection', ws, request, client);
+      });
+    });
+  } else if (pathname === '/client-socket') {
+    wssClient.handleUpgrade(request, socket, head, function done(ws) {
+      wssClient.emit('connection', ws);
+    });
+  } else {
+    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+    socket.destroy();
+  }
 });
 
 // view engine setup
@@ -184,6 +215,15 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+}
+
+/**
+ *
+ */
+function authenticateWebsocket(request, callback) {
+  debug(`Received transcriber request, authenticating: ${JSON.stringify(request.headers)}`);
+
+  callback.call(this, false, 'foo');
 }
 
 /**

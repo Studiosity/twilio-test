@@ -44,6 +44,8 @@ class Amazon {
             // fix encoding for accented characters
             transcript = decodeURIComponent(escape(transcript));
 
+            _that.logger(`(${results[0].IsPartial ? 'recognizing' : 'recognized'}) Text: ${transcript}`);
+
             options.transcriptionResult.call(
               this,
               'amazon',

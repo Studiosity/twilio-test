@@ -11,7 +11,7 @@ router.post('/connect', twilio.webhook({validate: false}), function(req, res, ne
   // Start streaming to the websocket
   const start = twiml.start();
   start.stream({
-    url: `wss://${req.headers.host}/websocket`,
+    url: `wss://${req.headers.host}/transcribe-socket`,
     track: 'both_tracks'
   });
 

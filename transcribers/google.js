@@ -1,5 +1,5 @@
 //Include Google Speech to Text
-const speech = require("@google-cloud/speech");
+const speech = require("@google-cloud/speech").v1p1beta1;
 
 const debug = require('debug');
 
@@ -25,6 +25,9 @@ class Google {
       .on("error", console.error)
       .on("data", (data) => {
         const result = data.results[0];
+
+        _that.logger(`(${result.isFinal ? 'recognized' : 'recognizing'}) Text: ${result.alternatives[0].transcript}`);
+
         options.transcriptionResult.call(
           this,
           'google',
