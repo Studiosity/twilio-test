@@ -1,9 +1,11 @@
 const MicrosoftTranscriber = require('./microsoft');
 const GoogleTranscriber = require('./google');
+const AmazonTranscriber = require('./amazon');
 
 const transcriberTypes = {
   microsoft: MicrosoftTranscriber,
-  google: GoogleTranscriber
+  google: GoogleTranscriber,
+  amazon: AmazonTranscriber
 }
 
 class TranscriberManager {

@@ -10,7 +10,7 @@ const transcriptionRequest = {
     sampleRateHertz: 8000,
     languageCode: "en-AU",
   },
-  interimResults: true, // If you want interim results, set this to true
+  interimResults: true,
 };
 
 class Google {
@@ -36,7 +36,7 @@ class Google {
   }
 
   writeData(data) {
-    this.transcriber.write(data);
+    if (!this.transcriber.destroyed) this.transcriber.write(data);
   }
 
   destroy() {

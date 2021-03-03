@@ -12,7 +12,7 @@ $(document).ready(function() {
     event.preventDefault();
     connectButton.prop('disabled', true);
 
-    const webSocket = new WebSocket("wss://0edb16ec27d4.ngrok.io/websocket");
+    const webSocket = new WebSocket("wss://293e40c7b15b.ngrok.io/websocket");
     webSocket.onmessage = function (msg) {
       const data = JSON.parse(msg.data);
       if (data.event === "transcription") {
