@@ -1,10 +1,15 @@
+const debug = require('debug')('test-app:call-route');
 const express = require('express');
 const router = express.Router();
 const twilio = require('twilio');
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
-// POST /calls/connect
-router.post('/connect', twilio.webhook({validate: false}), function(req, res, next) {
+const config = require('../config');
+
+// POST /call/connect
+router.post('/connect', twilio.webhook({ authToken: config.authToken, url: `https://${config.host}/call/connect` }), function(req, res, next) {
+  debug('Received POST to /connect');
+
   const user = req.body.user;
   const twiml = new VoiceResponse();
 

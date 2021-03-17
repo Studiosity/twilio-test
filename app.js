@@ -7,10 +7,13 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const flash = require('connect-flash');
 const bodyParser = require('body-parser');
+const twilio = require('twilio');
 
 const dashboard = require('./routes/dashboard');
 const call = require('./routes/call');
 const token = require('./routes/token');
+
+const config = require('./config');
 
 const app = express();
 const server = require("http").createServer(app);
@@ -21,8 +24,7 @@ const wssClient = new WebSocket.Server({ noServer: true });
 
 const TranscriberManager = require('./transcribers/transcriber_manager');
 
-const port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+app.set('port', config.port);
 
 wssTranscribe.on("connection", function connection(ws, request, client) {
   debug(`New transcriber connection initiated from ${client}`);
@@ -161,25 +163,6 @@ app.use(function(err, req, res, next) {
 });
 
 /**
- * Normalize a port into a number, string, or false.
- */
-function normalizePort(val) {
-  const port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
-
-/**
  * Event listener for HTTP server "error" event.
  */
 function onError(error) {
@@ -187,18 +170,14 @@ function onError(error) {
     throw error;
   }
 
-  const bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      console.error('Port requires elevated privileges');
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+      console.error('Port is already in use');
       process.exit(1);
       break;
     default:
@@ -210,18 +189,19 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 function onListening() {
-  const addr = server.address();
-  const bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  debug(`Listening on ${config.port}`);
 }
 
 /**
  *
  */
 function authenticateWebsocket(request, callback) {
-  debug(`Received transcriber request, authenticating: ${JSON.stringify(request.headers)}`);
+  debug(`Received transcriber request, authenticating`);
+  debug(`Headers: ${JSON.stringify(request.headers)}`);
+  const url = `https://${config.host}${request.url}`;
+  debug(`Url: ${request.url} => ${url}`);
+
+  debug(`Valid?: ${twilio.validateRequest(config.authToken, request.headers['x-twilio-signature'], url, {})}`);
 
   callback.call(this, false, 'foo');
 }
@@ -229,5 +209,5 @@ function authenticateWebsocket(request, callback) {
 /**
  * Listen on provided port, on all network interfaces.
  */
-server.listen(port, onListening);
+server.listen(config.port, onListening);
 server.on('error', onError);
