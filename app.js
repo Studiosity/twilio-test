@@ -196,16 +196,10 @@ function onListening() {
  *
  */
 function authenticateWebsocket(request, callback) {
-  debug(`Received transcriber request, authenticating`);
-  debug(`Headers: ${JSON.stringify(request.headers)}`);
-  const url = `https://${config.host}${request.url}`;
-  debug(`Url: ${request.url} => ${url}`);
+  const url = `${config.websocketProtocol}://${config.host}${request.url}`;
   const signature = request.headers['x-twilio-signature'];
-  debug(`Signature: ${signature}`);
-
-  debug(`Valid?: ${twilio.validateRequest(config.authToken, signature, url, {})}`);
-
-  callback.call(this, false, 'foo');
+  const valid = twilio.validateRequest(config.authToken, signature, url, {})
+  callback.call(this, !valid, 'foo');
 }
 
 /**

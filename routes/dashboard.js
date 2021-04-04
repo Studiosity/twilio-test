@@ -7,7 +7,10 @@ const config = require('../config');
 // GET /
 router.get('/', function (req, res) {
   req.session.userId = req.session.userId || hri.random();
-  res.render('dashboard/index', { user_id: req.session.userId, host: config.host });
+  res.render(
+    'dashboard/index',
+    { user_id: req.session.userId, host: config.host, websocketProtocol: config.websocketProtocol }
+  );
 });
 
 module.exports = router;

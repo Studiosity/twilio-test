@@ -20,4 +20,5 @@ module.exports = {
   authToken: process.env.TWILIO_AUTH_TOKEN,
   host: process.env.HOST,
   port: normalizePort(process.env.PORT),
+  websocketProtocol: process.env.WEBSOCKET_PROTOCOL
 };

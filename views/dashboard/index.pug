@@ -2,7 +2,7 @@ extends ../layout
 
 block script
   script.
-    window.config = { host: "#{host}" };
+    window.config = { host: "#{host}", websocketProtocol: "#{websocketProtocol}" };
   script(src="//sdk.twilio.com/js/client/releases/1.10.1/twilio.js")
   script(src="/js/dashboard.js")
 

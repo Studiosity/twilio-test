@@ -12,7 +12,7 @@ $(document).ready(function() {
     event.preventDefault();
     connectButton.prop('disabled', true);
 
-    const webSocket = new WebSocket(`wss://${window.config.host}/client-socket`);
+    const webSocket = new WebSocket(`${window.config.websocketProtocol}://${window.config.host}/client-socket`);
     webSocket.onmessage = function (msg) {
       const data = JSON.parse(msg.data);
       if (data.event === "transcription") {

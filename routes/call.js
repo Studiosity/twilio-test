@@ -8,15 +8,7 @@ const config = require('../config');
 
 // POST /call/connect
 router.post('/connect', twilio.webhook({ authToken: config.authToken, url: `https://${config.host}/call/connect` }), function(req, res, next) {
-  debug('Received POST to /connect');
-
-  debug(`Headers: ${JSON.stringify(req.headers)}`);
-  const url = `https://${config.host}/call/connect`;
-  debug(`Url: ${req.url} => ${url}`);
-  const signature = req.header('X-Twilio-Signature');
-  debug(`Signature: ${signature}`);
-
-  debug(`Valid?: ${twilio.validateRequest(config.authToken, signature, url, req.body)}`);
+  debug('Received POST to /call/connect');
 
   const user = req.body.user;
   const twiml = new VoiceResponse();
@@ -24,7 +16,7 @@ router.post('/connect', twilio.webhook({ authToken: config.authToken, url: `http
   // Start streaming to the websocket
   const start = twiml.start();
   start.stream({
-    url: `wss://${req.headers.host}/transcribe-socket`,
+    url: `${config.websocketProtocol}://${req.headers.host}/transcribe-socket`,
     track: 'both_tracks'
   });
 
