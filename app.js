@@ -200,8 +200,10 @@ function authenticateWebsocket(request, callback) {
   debug(`Headers: ${JSON.stringify(request.headers)}`);
   const url = `https://${config.host}${request.url}`;
   debug(`Url: ${request.url} => ${url}`);
+  const signature = request.headers['x-twilio-signature'];
+  debug(`Signature: ${signature}`);
 
-  debug(`Valid?: ${twilio.validateRequest(config.authToken, request.headers['x-twilio-signature'], url, {})}`);
+  debug(`Valid?: ${twilio.validateRequest(config.authToken, signature, url, {})}`);
 
   callback.call(this, false, 'foo');
 }

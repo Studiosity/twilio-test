@@ -10,6 +10,14 @@ const config = require('../config');
 router.post('/connect', twilio.webhook({ authToken: config.authToken, url: `https://${config.host}/call/connect` }), function(req, res, next) {
   debug('Received POST to /connect');
 
+  debug(`Headers: ${JSON.stringify(req.headers)}`);
+  const url = `https://${config.host}/call/connect`;
+  debug(`Url: ${req.url} => ${url}`);
+  const signature = req.header('X-Twilio-Signature');
+  debug(`Signature: ${signature}`);
+
+  debug(`Valid?: ${twilio.validateRequest(config.authToken, signature, url, req.body)}`);
+
   const user = req.body.user;
   const twiml = new VoiceResponse();
 
